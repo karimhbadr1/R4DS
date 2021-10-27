@@ -1,0 +1,660 @@
+---
+title: "Chapter 10 - Relational Data with dplyr"
+author: "Karim Badr"
+date: "28/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Prerequistes
+```{r}
+library(tidyverse)
+library(nycflights13)
+library("viridis")
+devtools::install_github("bergant/datamodelr")
+library("datamodelr")
+```
+
+#nycflights13
+
+```{r}
+airlines
+```
+```{r}
+airports
+```
+```{r}
+planes
+```
+```{r}
+weather
+```
+```{r}
+flights
+```
+```{r}
+planes %>% 
+  count(tailnum) %>% 
+  filter(n>1)
+```
+```{r}
+weather %>% 
+  count(year,month,day,hour,origin) %>% 
+  filter(n>1)
+```
+```{r}
+view(weather)
+```
+
+```{r}
+flights %>% 
+  count(year, month, day, hour, flight) %>% 
+  filter(n > 1)
+
+```
+```{r}
+view(flights)
+```
+
+```{r}
+flights %>% 
+  count(year, month, day, hour, flight,tailnum) %>% 
+  filter(n > 1)
+```
+```{r}
+flights<-flights %>%
+  arrange(year, month, day, sched_dep_time, carrier, flight) %>%
+  mutate(flight_id = row_number())
+```
+
+```{r}
+install.packages("Lahman")
+```
+```{r}
+library(Lahman)
+view(Batting)
+```
+
+```{r}
+Batting %>%
+  count(playerID,yearID,stint) %>% 
+  filter(n>1)
+```
+```{r}
+install.packages("babynames")
+library(babynames)
+view(babynames)
+```
+```{r}
+babynames %>% 
+  count(name,year) %>% 
+  filter(n>1)
+```
+```{r}
+install.packages("nasaweather")
+```
+```{r}
+library(nasaweather)
+```
+```{r}
+view(atmos)
+```
+
+```{r}
+atmos %>% 
+  count(lat,long,year,month) %>% 
+  filter(n>1)
+```
+```{r}
+install.packages("fueleconomy")
+library(fueleconomy)
+view(vehicles)
+```
+```{r}
+vehicles %>% 
+  count(id) %>% 
+  filter(n>1)
+```
+```{r}
+library(ggplot2)
+view(diamonds)
+```
+
+```{r}
+diamonds[which(duplicated(diamonds)==T),]
+```
+```{r}
+a<-which(duplicated(diamonds)==T)
+```
+
+```{r}
+diamonds[a,]
+```
+```{r}
+diamonds_1<-diamonds %>% 
+  mutate(id=row_number())
+view(diamonds_1)
+```
+
+```{r}
+view(Batting)
+view(Master)
+view(Salaries)
+```
+
+```{r}
+dm1 <- dm_from_data_frames(list(
+  Batting = Lahman::Batting,
+  Master = Lahman::Master,
+  Salaries = Lahman::Salaries
+)) %>%
+  dm_set_key("Batting", c("playerID", "yearID", "stint")) %>%
+  dm_set_key("Master", "playerID") %>%
+  dm_set_key("Salaries", c("yearID", "teamID", "playerID")) %>%
+  dm_add_references(
+    Batting$playerID == Master$playerID,
+    Salaries$playerID == Master$playerID
+  )
+
+dm_create_graph(dm1, rankdir = "LR", columnArrows = TRUE) %>%
+  dm_render_graph()
+```
+
+```{r}
+view(Managers)
+view(AwardsManagers)
+```
+
+```{r}
+Master %>% 
+  count(playerID) %>% 
+  filter(n>1)
+```
+```{r}
+Managers %>% 
+  count(yearID,teamID,inseason) %>% 
+  filter(n>1)
+```
+```{r}
+AwardsManagers %>% 
+  count(yearID,playerID,awardID) %>% 
+  filter(n>1)
+```
+```{r}
+view(Batting)
+view(Pitching)
+view(Fielding)
+```
+
+```{r}
+Batting %>% 
+  count(playerID,yearID,stint) %>% 
+  filter(n>1)
+```
+```{r}
+Pitching %>% 
+  count(playerID,yearID,stint) %>% 
+  filter(n>1)
+```
+```{r}
+Fielding %>% 
+  count(playerID,yearID,stint,POS) %>% 
+  filter(n>1)
+```
+
+#Mutating Joins
+
+```{r}
+flights2<-flights %>% 
+  select(year:day,hour,origin,dest,tailnum,carrier)
+```
+
+```{r}
+view(flights2)
+view(airlines)
+```
+
+```{r}
+flights2 %>% 
+  select(-origin,-dest) %>% 
+  left_join(airlines,by="carrier")
+```
+```{r}
+flights2 %>% 
+  select(-origin,-dest) %>% 
+  mutate(name=airlines$name[match(carrier,airlines$carrier)])
+```
+#Understanding Joins
+
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     3, "x3"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2",
+     4, "y3"
+)
+```
+
+#Inner Join
+```{r}
+x %>% 
+  inner_join(y,by="key")
+```
+#Outer Joins
+#Dpulicate Keys
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     1, "x4"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2"
+)
+```
+
+```{r}
+left_join(x,y,by="key")
+```
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     3, "x4"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2",
+     2, "y3",
+     3, "y4"
+)
+```
+
+```{r}
+left_join(x,y,by="key")
+```
+```{r}
+flights2 %>% 
+  left_join(weather)
+```
+```{r}
+flights2 %>% 
+  left_join(planes,by="tailnum")
+```
+```{r}
+flights2 %>% 
+  left_join(airports, c("dest" = "faa"))
+```
+```{r}
+flights2 %>% 
+  left_join(airports, c("origin" = "faa"))
+```
+#Exercises
+#1
+```{r}
+airports %>%
+  semi_join(flights, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+```{r}
+avg_dest_delay<-flights %>% 
+  group_by(dest) %>% 
+  summarise(delay=mean(arr_delay,na.rm=TRUE)) %>% 
+  inner_join(airports,by=c("dest"="faa"))
+  
+```
+
+
+```{r}
+avg_dest_delay %>% 
+  ggplot(aes(lon, lat,colour=delay)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+```{r}
+avg_dest_delay %>% 
+  ggplot(aes(lon, lat,size=delay)) +
+    borders("state") +
+  geom_point()+
+    coord_quickmap()
+```
+#2
+```{r}
+airports_latlon<-airports %>% 
+  select(faa,lat,lon)
+
+flights %>% 
+  left_join(airports_latlon,by=c("dest"="faa")) %>% 
+  left_join(airports_latlon,by=c("origin"="faa"),suffix=c("_dest","_origin"))
+```
+#3
+```{r}
+planes_1<-planes %>% 
+  select(tailnum,plane_year=year) 
+```
+
+```{r}
+flights_a<-flights %>% 
+  select(year,arr_delay,dep_delay,tailnum)
+
+flights_1<-flights %>% 
+  select(year,arr_delay,dep_delay,tailnum) %>% 
+  group_by(tailnum) %>% 
+  summarise(avg_arr_delay=mean(arr_delay,na.rm=TRUE),avg_dep_delay=mean(dep_delay,na.rm=TRUE)) %>% 
+  filter(!is.na(tailnum))
+```
+
+```{r}
+PLFL<-inner_join(flights_a,planes_1,by="tailnum") %>% 
+  mutate(age=year-plane_year) %>% 
+  select(-year,-plane_year) %>% 
+  group_by(age) %>% 
+  summarise(avg_arr_delay=mean(arr_delay,na.rm=TRUE),avg_dep_delay=mean(dep_delay,na.rm=TRUE)) %>% 
+  filter(!is.na(age))
+```
+
+```{r}
+ggplot(PLFL,aes(x=age,y=avg_arr_delay))+
+  geom_point()
+```
+```{r}
+ggplot(PLFL,aes(x=age,y=avg_dep_delay))+
+  geom_point()
+```
+```{r}
+PLFL %>% 
+  filter(age<=25) %>% 
+  ggplot(aes(x=age,y=avg_arr_delay))+
+  geom_point()
+```
+```{r}
+PLFL %>% 
+  filter(age<=25) %>% 
+  ggplot(aes(x=age,y=avg_dep_delay))+
+  geom_point()
+```
+```{r}
+cor.test(PLFL$age,PLFL$avg_dep_delay)
+```
+```{r}
+cor.test(PLFL$age,PLFL$avg_arr_delay)
+```
+
+```{r}
+view(flights)
+view(planes)
+```
+
+```{r}
+plane_cohorts <- inner_join(flights,
+  select(planes, tailnum, plane_year = year),
+  by = "tailnum"
+)
+```
+
+
+#4
+
+```{r}
+view(weather)
+```
+
+```{r}
+flight_weather <-
+  flights %>%
+  inner_join(weather, by = c(
+    "origin" = "origin",
+    "year" = "year",
+    "month" = "month",
+    "day" = "day",
+    "hour" = "hour"
+  ))
+```
+
+```{r}
+flight_weather %>% 
+  ggplot(aes(x=precip,y=dep_delay))+
+  geom_point()
+```
+```{r}
+flight_weather %>% 
+  group_by(precip) %>% 
+  summarise(departure_delay=mean(dep_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=precip,y=departure_delay))+
+  geom_point()+
+  geom_line()
+```
+```{r}
+flight_weather %>% 
+  group_by(precip) %>% 
+  summarise(arrival_delay=mean(arr_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=precip,y=arrival_delay))+
+  geom_point()+
+  geom_line()
+```
+```{r}
+flight_weather %>% 
+  group_by(temp) %>% 
+  summarise(arrival_delay=mean(arr_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=temp,y=arrival_delay))+
+  geom_point()+
+  geom_line()
+```
+```{r}
+flight_weather %>%
+group_by(temp) %>% 
+  summarise(departure_delay=mean(dep_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=temp,y=departure_delay))+
+  geom_point()+
+  geom_line()
+```
+```{r}
+flight_weather %>% 
+  group_by(dewp) %>% 
+  summarise(arrival_delay=mean(arr_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=dewp,y=arrival_delay))+
+  geom_point()+
+  geom_line()
+```
+```{r}
+flight_weather %>% 
+  group_by(visib) %>% 
+  summarise(arrival_delay=mean(arr_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=visib,y=arrival_delay))+
+  geom_point()+
+  geom_line()
+```
+
+```{r}
+flight_weather %>% 
+  mutate(visib_cat = cut_interval(visib, n = 10)) %>% 
+  group_by(visib_cat) %>% 
+  summarise(departure_delay=mean(dep_delay,na.rm=TRUE)) %>% 
+  ggplot(aes(x=visib_cat,y=departure_delay))+
+  geom_point()
+```
+#5
+```{r}
+FL1<-flights %>% 
+  filter(year==2013,month==6,day==13) %>% 
+  group_by(dest) %>% 
+  summarise(avg_dest_del=mean(arr_delay,na.rm=TRUE)) %>% 
+  filter(!is.na(avg_dest_del))
+```
+
+```{r}
+view(airports)
+```
+
+
+```{r}
+AIR1<-airports %>% 
+  select(faa,lat,lon)
+```
+
+```{r}
+JOIN1<-inner_join(FL1,AIR1,by=c("dest"="faa"))
+```
+
+```{r}
+JOIN1 %>% ggplot(aes(lon, lat,colour=avg_dest_del,size=avg_dest_del)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()+
+   scale_colour_viridis()
+```
+#Filtering Joins
+
+```{r}
+top_dest <- flights %>%
+  count(dest, sort = TRUE) %>%
+  head(10)
+```
+
+```{r}
+flights %>% 
+  filter(dest %in% top_dest$dest)
+```
+```{r}
+flights %>% 
+  semi_join(top_dest)
+```
+```{r}
+flights %>%
+  anti_join(planes, by = "tailnum") %>% 
+  count(tailnum,sort=TRUE)
+```
+#Exercises
+#1
+```{r}
+flights %>% 
+  filter(is.na(tailnum)) %>% 
+  filter(!is.na(dep_time))
+```
+```{r}
+flights %>% 
+  anti_join(planes,by="tailnum") %>% 
+  left_join(airlines,by="carrier") %>% 
+  count(name,carrier,sort=TRUE) %>% 
+  mutate(p=n/sum(n))
+```
+```{r}
+view(flights)
+```
+ 
+#2
+Filter flights to only show flights with planes that have flown at least 100 flights.
+```{r}
+flightsgt100<-flights %>% 
+  group_by(tailnum) %>% 
+  count(sort=TRUE) %>%
+  filter(!is.na(tailnum)&n>=100)
+```
+
+```{r}
+flights %>% 
+  semi_join(flightsgt100,by="tailnum")
+```
+#3
+```{r}
+view(flights)
+```
+
+```{r}
+vehicles %>% 
+  semi_join(common,by=c("make","model"))
+```
+#4
+```{r}
+a<-flights %>% 
+  group_by(origin,year,month,day,hour) %>% 
+  summarise(mean_delay=mean(dep_delay,na.rm=TRUE)) %>% 
+  ungroup() %>% 
+  arrange(desc(mean_delay)) %>% 
+  top_n(48)
+```
+```{r}
+worst_hours <- flights %>%
+  mutate(hour = sched_dep_time %/% 100) %>%
+  group_by(origin, year, month, day, hour) %>%
+  summarise(dep_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(dep_delay)) %>%
+  slice(1:48)
+```
+
+```{r}
+worst_hours_weather1<-semi_join(a, weather, 
+                                  by = c("origin", "year",
+                                         "month", "day", "hour"))
+```
+
+```{r}
+b<-left_join(a,weather,by=c("origin", "year",
+                                         "month", "day", "hour")) %>% 
+  select(temp,wind_speed,precip,mean_delay)
+```
+
+```{r}
+b %>% 
+  ggplot(aes(x=temp,y=mean_delay))+
+  geom_point()
+```
+```{r}
+b %>% 
+  ggplot(aes(x=wind_speed,y=mean_delay))+
+  geom_point()
+```
+```{r}
+b %>% 
+  ggplot(aes(x=precip,y=mean_delay))+
+  geom_point()
+```
+```{r}
+view(planes)
+view(airlines)
+view(flights)
+```
+
+```{r}
+flights %>% 
+  filter(!is.na(tailnum)) %>% 
+  distinct(tailnum,carrier) %>% 
+  count(tailnum) %>% 
+  filter(n>1) %>% 
+  left_join(,by)
+```
+```{r}
+ flights %>%
+  filter(!is.na(tailnum)) %>%
+  distinct(tailnum, carrier) %>% 
+  group_by(tailnum) %>% 
+  filter(n()>1) %>% 
+  # join with airlines to get airline names
+  left_join(airlines, by = "carrier") %>% 
+  arrange(tailnum)
+```
+
+
+
+

@@ -1,0 +1,874 @@
+---
+title: "Chapter 3- Data Transformation with dplyr"
+author: "Karim Badr"
+date: "25/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Prerequisities
+```{r}
+library(nycflights13)
+library(tidyverse)
+```
+
+```{r}
+flights
+```
+#Filter rows with filter()
+```{r}
+filter(flights,month==1,day==1)
+```
+```{r}
+dec25<-filter(flights,month==12,day==25)
+dec25
+```
+```{r}
+sqrt(2)^2==2
+near(sqrt(2)^2,2)
+```
+#Logical Operators
+```{r}
+filter(flights,month==11|month==12)
+```
+```{r}
+filter(flights,month %in% c(11,12))
+```
+```{r}
+filter(flights,!(arr_delay>120|dep_delay>120))
+```
+```{r}
+filter(flights,arr_delay<=120,dep_delay<=120)
+```
+#Missing Values
+```{r}
+NA>5
+```
+```{r}
+df<-tibble(x=c(1,NA,3))
+filter(df,x>1)
+```
+```{r}
+filter(df,x>1|is.na(x))
+```
+```{r}
+View(flights)
+```
+
+#Exercises
+
+```{r}
+filter(flights,flights$arr_delay>=120)
+```
+```{r}
+filter(flights,dest=="IAH"|dest=="HOU")
+```
+```{r}
+filter(flights,dest%in% c("IAH","HOU"))
+```
+```{r}
+filter(flights,carrier%in%c("UA","AA","DL"))
+```
+```{r}
+filter(flights,month%in%c(7,8,9))
+```
+```{r}
+filter(flights,dep_delay<=0,arr_delay>120)
+```
+```{r}
+filter(flights,dep_delay>=60,dep_delay-arr_delay>30)
+```
+```{r}
+filter(flights,dep_time <= 600 | dep_time == 2400)
+```
+```{r}
+filter(flights,is.na(dep_time))
+```
+```{r}
+summary(flights)
+```
+
+```{r}
+NA^0
+NA|TRUE
+FALSE&NA
+NA*0
+```
+#Arrange rows with arrange()
+```{r}
+arrange(flights,year,month,day)
+```
+```{r}
+arrange(flights,desc(arr_delay))
+```
+```{r}
+df<-tibble(x=c(5,NA,2))
+```
+
+```{r}
+arrange(df,x)
+```
+```{r}
+arrange(df,desc(x))
+```
+```{r}
+arrange(df,desc(is.na(x)),x)
+```
+```{r}
+arrange(df,x,desc(is.na(x)))
+```
+
+```{r}
+arrange(flights, dep_time) %>% 
+  tail()
+```
+```{r}
+arrange(flights,desc(is.na(dep_time)),dep_time)
+```
+```{r}
+arrange(flights,desc(dep_delay))
+```
+```{r}
+arrange(flights,dep_delay)
+```
+```{r}
+head(arrange(flights, air_time))
+```
+```{r}
+head(arrange(flights, desc(distance/air_time)))
+```
+```{r}
+head(arrange(flights, desc(distance)))
+```
+```{r}
+head(arrange(flights, distance))
+```
+#Select Columns with select()
+```{r}
+select(flights,year,month,day)
+```
+```{r}
+A<-select(flights,year,day,month)
+```
+
+```{r}
+select(flights,year:day)
+```
+```{r}
+select(flights,-(year:day))
+```
+```{r}
+select(flights,starts_with("d"))
+```
+```{r}
+df1<-tibble(x1=c(1,2),x2=1,x3=4,x5=9,y7=9,x9=8)
+```
+
+```{r}
+select(df1,num_range("y",1:7))
+```
+```{r}
+rename(flights,tailn909=tailnum)
+```
+```{r}
+select(flights,time_hour,air_time,everything())
+```
+```{r}
+select(flights, dep_time, dep_delay, arr_time, arr_delay)
+select(flights, "dep_time", "dep_delay", "arr_time", "arr_delay")
+select(flights, 4, 6, 7, 9)
+select(flights, all_of(c("dep_time", "dep_delay", "arr_time", "arr_delay")))
+select(flights, any_of(c("dep_time", "dep_delay", "arr_time", "arr_delay")))
+variables <- c("dep_time", "dep_delay", "arr_time", "arr_delay")
+select(flights, all_of(variables))
+variables <- c("dep_time", "dep_delay", "arr_time", "arr_delay")
+select(flights, !!variables)
+```
+
+```{r}
+variables <- c("dep_time", "dep_delay", "arr_time", "arr_delay")
+select(flights, !!variables)
+```
+```{r}
+arrange(flights,!!!variables)
+```
+```{r}
+select(flights,year,year)
+```
+```{r}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+select(flights, one_of(vars))
+```
+```{r}
+select(flights,contains("TIME"))
+```
+```{r}
+select(flights, contains("TIME", ignore.case = FALSE))
+```
+#Add new variables with mutate()
+```{r}
+flights_sml<-select(flights,year:day,ends_with("delay"),distance,air_time)
+```
+
+```{r}
+mutate(flights_sml,gain=arr_delay-dep_delay,speed=distance/air_time*60)
+```
+```{r}
+mutate(flights_sml,gain=arr_delay-dep_delay,hours=air_time/60,gain_per_hour=gain/hours)
+```
+```{r}
+transmute(flights_sml,gain=arr_delay-dep_delay,hours=air_time/60,gain_per_hour=gain/hours)
+```
+#Useful Creation Functions
+```{r}
+transmute(flights,dep_time,hour=dep_time%/%100,minute=dep_time%%100)
+```
+```{r}
+x<-1:10
+lag(x)
+lead(x)
+```
+```{r}
+cumsum(x)
+```
+```{r}
+sum(x)
+```
+```{r}
+cummean(x)
+```
+```{r}
+y<-c(1,2,2,NA,3,4)
+min_rank(y)
+desc(min_rank(y))
+min_rank(desc(y))
+```
+```{r}
+row_number(y)
+```
+```{r}
+dense_rank(y)
+```
+```{r}
+percent_rank(y)
+```
+```{r}
+cume_dist(y)
+```
+```{r}
+transmute(flights,dep_time_hr=dep_time%/%100,dep_time_min=dep_time%%100,sched_dep_time_hr=sched_dep_time%/%100,sched_dep_time_min=sched_dep_time%%100)
+```
+```{r}
+transmute(flights,dep_time,dep_time_mins=(dep_time%/%100*60+dep_time%%100)%%1440,sched_dep_time,sched_dep_time_mins=(sched_dep_time%/%100*60+sched_dep_time%%100)%%1440)
+```
+```{r}
+time2mins<-function(x){
+  (x%/%100*60+x%%100)%%1440
+}
+```
+
+```{r}
+transmute(flights,dep_time,
+  dep_time_mins = time2mins(dep_time),sched_dep_time,
+  sched_dep_time_mins = time2mins(sched_dep_time)
+)
+```
+```{r}
+(A<-transmute(flights,arr_time,dep_time,air_time,air_time_calc=arr_time-dep_time))
+```
+```{r}
+filter(A,air_time_calc<0)
+```
+```{r}
+(B<-mutate(A,ARR_TIME_MINS=time2mins(arr_time),DEP_TIME_MINS=time2mins(dep_time)))
+```
+```{r}
+B$arr_time-B$dep_time
+```
+```{r}
+B$ARR_TIME_MINS-B$DEP_TIME_MINS
+```
+```{r}
+(C<-select(flights,dep_time,sched_dep_time,dep_delay))
+```
+```{r}
+D<-select(flights,carrier,flight,dep_delay)
+D
+```
+```{r}
+D<-mutate(D,dep_delay_rank=min_rank(desc(dep_delay)))
+D<-arrange(D,dep_delay_rank)
+D
+```
+```{r}
+1:3+1:10
+```
+Alternatively, we could use the top_n().
+
+flights_delayed3 <- top_n(flights, 10, dep_delay)
+
+#Grouped summaries with summarize()
+```{r}
+summarise(flights,delay=mean(dep_delay,na.rm=TRUE))
+```
+```{r}
+by_day<-group_by(flights,year,month,day)
+summarize(by_day,delay=mean(dep_delay,na.rm = TRUE))
+```
+
+#Combining Multiple Operations with the Pipe
+```{r}
+by_dest<-group_by(flights,dest)
+delay<-summarize(by_dest,
+                 count=n(),
+                 dist=mean(distance,na.rm=T),
+                 delay=mean(arr_delay,na.rm = T)
+)
+delay<-filter(delay,count>20,dest!="HNL")
+```
+```{r}
+ggplot(data = delay,mapping = aes(x=dist,delay))+
+  geom_point(aes(size=count),alpha=1/3)+
+  geom_smooth(se=FALSE)
+```
+```{r}
+delays<-flights %>% 
+  group_by(dest) %>% 
+  summarize(count=n(),
+            dist=mean(distance,na.rm=T),
+            delay=mean(arr_delay,na.rm=T)) %>% 
+  filter(count>20,dest!="HNL") 
+```
+```{r}
+delays %>% 
+  ggplot(mapping = aes(x=dist,delay))+
+  geom_point(aes(size=count),alpha=1/3)+
+  geom_smooth(se=FALSE)
+```
+#Missing Values
+```{r}
+flights %>% 
+  group_by(year,month,day) %>%
+```
+
+
+```{r}
+summarize(mean=mean(dep_delay,na.rm=T))
+```
+
+```{r}
+not_cancelled<-flights %>% 
+  filter(!is.na(dep_delay),!is.na(arr_delay)) %>% 
+  group_by(year,month) 
+
+not_cancelled %>% 
+  summarize(mean_dep_delay=mean(dep_delay),mean_arr_delay=mean(arr_delay)) %>% 
+  ggplot()+
+  geom_point(mapping=aes(x=month,y=mean_dep_delay),show.legend=TRUE)+
+  geom_line(mapping=aes(x=month,y=mean_dep_delay),show.legend=TRUE)+
+  geom_point(mapping=aes(x=month,y=mean_arr_delay),color="blue",show.legend=TRUE)+
+  geom_line(mapping=aes(x=month,y=mean_arr_delay),color="blue",show.legend=TRUE)
+```
+```{r}
+delays<-not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarize(delay=mean(arr_delay))
+ggplot(data=delays,mapping=aes(x=delay))+
+  geom_freqpoly(bandwidth=10)
+```
+```{r}
+delays<-not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarise(delay=mean(arr_delay,na.rm = TRUE),n=n())
+
+ggplot(data=delays,mapping=aes(x=n,y=delay))+
+  geom_point(alpha=1/10)
+```
+```{r}
+delays %>% 
+  filter(n>25) %>% 
+  ggplot(mapping=aes(x=n,y=delay))+
+  geom_point(alpha=1/10)
+```
+```{r}
+batting<-as_tibble(Lahman::Batting)
+
+batters<-batting %>% 
+  group_by(playerID) %>% 
+  summarise(
+    ba=sum(H,na.rm = TRUE)/sum(AB,na.rm = TRUE),
+    ab=sum(AB,na.rm=TRUE)
+  )
+```
+```{r}
+batters %>% 
+  filter(ab>100) %>% 
+  ggplot(mapping=aes(x=ab,y=ba))+
+  geom_point()+
+  geom_smooth(se=FALSE)
+```
+```{r}
+batters %>% 
+  arrange(desc(ba))
+```
+```{r}
+not_cancelled %>% 
+  group_by(year,month,day) %>% 
+  summarise(
+    avg_del_1=mean(arr_delay),
+    ave_del_2=mean(arr_delay[arr_delay>0])
+  )
+```
+```{r}
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(distance_sd=sd(distance)) %>% 
+  arrange(desc(distance_sd))
+```
+```{r}
+not_cancelled %>% 
+  group_by(month,day,year) %>% 
+  summarize(
+    first=min(dep_time),
+    last=max(dep_time),
+    quartile=quantile(dep_time,0.25)
+  )
+```
+```{r}
+not_cancelled[1,1:2]
+```
+```{r}
+not_cancelled %>% 
+  group_by(year,month,day) %>% 
+  summarize(
+    first_dep=first(dep_time),
+    last_dep=last(dep_time),
+    n_th=nth(dep_time,3)
+  )
+```
+```{r}
+min_rank(desc(df))
+         
+```
+```{r}
+df2<-not_cancelled %>%
+  ungroup() %>% 
+  select(dep_time)
+
+min_rank(df2)
+```
+```{r}
+not_cancelled %>% 
+  group_by(year,month,day) %>% 
+  mutate(r=min_rank(desc(dep_time))) %>% 
+  filter(r%in%range(r))
+```
+```{r}
+not_cancelled %>%
+  ungroup() %>%
+  summarize(sum(!is.na(dep_time)))
+```
+```{r}
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarize(carriers=n_distinct(carrier)) %>% 
+  arrange(desc(carriers))
+```
+```{r}
+not_cancelled %>% 
+  ungroup() %>% 
+  count(dest)
+```
+```{r}
+not_cancelled %>%
+  ungroup() %>% 
+  count(tailnum,wt=distance)
+```
+```{r}
+df3<-tibble(x=c("A","B","A","B","C"),y=c(1,3,5,6,2))
+df3 %>% 
+  count(x,wt=y)
+```
+```{r}
+not_cancelled %>% 
+  group_by(year,month,day) %>% 
+  summarize(n_early=sum(dep_time<500))
+```
+```{r}
+not_cancelled %>% 
+  group_by(year,month,day) %>% 
+  summarize(hour_perc=mean(arr_delay>60),n=n(),n1=sum(arr_delay>60))
+```
+#Grouping by Multiple Variables
+```{r}
+daily<-group_by(flights,year,month,day)
+(per_day<-summarise(daily,flights=n()))
+```
+```{r}
+(per_month<-summarise(per_day,flights=sum(flights)))
+```
+```{r}
+per_year<-summarise(per_month,flight=sum(flights))
+per_year
+```
+```{r}
+daily %>% 
+  ungroup() %>% 
+  summarize(flights=n())
+```
+#Exercises
+#1
+#2
+```{r}
+not_cancelled <- flights %>%
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+```
+
+```{r}
+not_cancelled %>% 
+  count(dest)
+```
+```{r}
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(n=n())
+```
+```{r}
+not_cancelled %>% 
+  group_by(dest) %>% 
+  tally()
+```
+```{r}
+not_cancelled %>% 
+  count(tailnum,wt=distance)
+```
+```{r}
+not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarise(n=sum(distance))
+```
+```{r}
+not_cancelled %>% 
+  group_by(tailnum) %>% 
+  tally(distance)
+```
+#3
+```{r}
+Can_Per_Day<-flights %>% 
+  mutate(cancelled=is.na(dep_delay)|is.na(arr_delay)) %>% 
+  group_by(year,month,day) %>% 
+  summarise(
+    cancelled_num=sum(cancelled),
+    total_flights_num=n()
+  )
+
+ggplot(data=Can_Per_Day,mapping=aes(x=total_flights_num,y=cancelled_num))+
+  geom_point()
+```
+```{r}
+cancelled_per_day <- 
+  flights %>%
+  mutate(cancelled = (is.na(arr_delay) | is.na(dep_delay))) %>%
+  group_by(year, month, day) %>%
+  summarise(
+    cancelled_num = sum(cancelled),
+    flights_num = n(),
+  )
+cancelled_per_day
+```
+
+
+```{r}
+(cancelled_and_delays_1<-
+  flights %>% 
+  mutate(cancelled = (is.na(arr_delay) | is.na(dep_delay))) %>%
+  group_by(year,month,day) %>% 
+  summarise(
+    prop_canc=mean(cancelled),
+    avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+    avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+    ))
+```
+```{r}
+ggplot(data=cancelled_and_delays_1)+
+  geom_point(mapping = aes(x=prop_canc,y=avg_dep_delay))+
+  geom_point(mapping = aes(x=prop_canc,y=avg_arr_delay),color="blue")+
+  coord_flip()
+```
+
+```{r}
+cancelled_and_delays <- 
+  flights %>%
+  mutate(cancelled = (is.na(arr_delay) | is.na(dep_delay))) %>%
+  group_by(year, month, day) %>%
+  summarise(
+    cancelled_prop = mean(cancelled),
+    avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+    avg_arr_delay = mean(arr_delay, na.rm = TRUE)
+  ) 
+cancelled_and_delays
+```
+#5
+```{r}
+(worst_delays_carrier<-flights %>% 
+group_by(carrier) %>% 
+summarise(
+  dep_delay_mean=mean(dep_delay,na.rm=T),
+  arr_delay_mean=mean(arr_delay,na.rm = T)) %>% 
+arrange(desc(arr_delay_mean,dep_delay_mean))
+)
+
+filter(airlines,carrier=="F9")
+```
+```{r}
+airlines
+```
+```{r}
+worst_delays_carrier %>% 
+  arrange(desc(dep_delay_mean))
+```
+```{r}
+flights %>% 
+  filter(!is.na(arr_delay)) %>% 
+  group_by(origin,carrier,dest) %>% 
+  summarise(arr_delay = sum(arr_delay),
+    flights= n())%>%
+  group_by(origin,dest) %>% 
+  mutate(arr_delay_total = sum(arr_delay),
+             flights_total=sum(flights)) %>% 
+  ungroup() %>% 
+  mutate(
+    arr_delay_others = (arr_delay_total - arr_delay) /
+      (flights_total - flights),
+    arr_delay_mean = arr_delay / flights,
+    arr_delay_diff = arr_delay_mean - arr_delay_others
+  ) %>%
+  # remove NaN values (when there is only one carrier)
+  filter(is.finite(arr_delay_diff)) %>%  # average over all airports it flies to
+  group_by(carrier) %>%
+  summarise(arr_delay_diff = mean(arr_delay_diff)) %>%
+  arrange(desc(arr_delay_diff))
+```
+```{r}
+flights %>% 
+  filter(!is.na(arr_delay)) %>% 
+  group_by(origin,carrier,dest) %>% 
+  summarise(arr_delay = sum(arr_delay),
+    flights= n())%>%
+  group_by(origin,dest) %>% 
+  mutate(arr_delay_total = sum(arr_delay),
+             flights_total=sum(flights)) 
+```
+```{r}
+flights %>%
+  count(dest, sort = TRUE)
+```
+```{r}
+(EX57<-flights %>%
+  filter(!is.na(dep_delay)) %>% 
+  select(year,month,day,tailnum,dep_delay) %>% 
+  arrange(tailnum,year,month,day) %>% 
+  group_by(tailnum) %>% 
+  mutate(cumulative_hr_delays = cumsum(dep_delay > 60)) %>%  
+  summarise(total_flights = sum(cumulative_hr_delays < 1))
+)
+```
+```{r}
+EX57 %>% 
+  filter(tailnum=="N0EGMQ",dep_delay>60)
+```
+#Grouped Mutates (and Filters)
+```{r}
+flights_sml %>% 
+  group_by(year) %>% 
+  filter(rank(desc(arr_delay))<10) %>% 
+  arrange(arr_delay)
+```
+```{r}
+A<-arrange(flights_sml,desc(arr_delay)) %>%   
+mutate(rank=rank(desc(A$arr_delay)))
+```
+
+```{r}
+popular_dests<-flights %>% 
+  group_by(dest) %>% 
+  filter(n()>365)  
+
+ABC<-popular_dests %>% summarize(n=n()) 
+min(ABC$n)
+```
+```{r}
+(ABCD<-popular_dests %>% 
+  filter(arr_delay>0) %>% 
+  mutate(prop_delay=arr_delay/sum(arr_delay)) %>%
+  select(dest,arr_delay,prop_delay) %>% 
+  arrange(dest)) %>% 
+  summarize(sum(arr_delay),sum(prop_delay))
+```
+```{r}
+ABCD %>% 
+  summarize(sum(prop_delay))
+```
+
+```{r}
+ABCD %>% 
+  select(dest,arr_delay) %>% 
+  filter(dest=="ALB") %>% 
+  summarise(n=sum(arr_delay))
+```
+```{r}
+EX1<-tibble(x = 1:9,
+       group = rep(c("a", "b", "c"), each = 3))
+```
+
+```{r}
+EX1 %>% 
+  mutate(x_mean = mean(x)) %>% 
+  group_by(group) %>% 
+  mutate(x_mean1 = mean(x))
+```
+```{r}
+tibble(x = 1:9,
+       group = rep(c("a", "b", "c"), each = 3)) %>%
+ mutate(lag_x = lag(x),
+         lead_x = lead(x)) %>% 
+  group_by(group) %>% 
+  mutate(lag_x_1=lag(x),lead_x_1=lead(x))
+  
+```
+#Exercises
+2
+```{r}
+flights %>%
+  filter(!is.na(tailnum)) %>%
+  mutate(on_time = !is.na(arr_time) & (arr_delay <= 0)) %>%
+  group_by(tailnum)%>%
+  summarise(on_time = mean(on_time), n = n()) %>% 
+  filter(min_rank(on_time) == 1)
+```
+```{r}
+flights %>%
+  filter(!is.na(tailnum), is.na(arr_time) | !is.na(arr_delay)) %>%
+  mutate(on_time = !is.na(arr_time) & (arr_delay <= 0)) %>%
+  group_by(tailnum) %>%
+  summarise(on_time = mean(on_time), n = n()) %>%
+  filter(n >= 20) %>%
+  filter(min_rank(on_time) == 1)
+```
+```{r}
+flights %>%
+  filter(!is.na(arr_delay)) %>%
+  group_by(tailnum) %>%
+  summarise(arr_delay = mean(arr_delay), n = n()) %>%
+  filter(n >= 20) %>% 
+   filter(min_rank(desc(arr_delay)) == 1)
+```
+```{r}
+flights %>% 
+  group_by(hour) %>% 
+  summarise(arr_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  arrange(arr_delay)
+```
+```{r}
+flights %>% 
+  filter(arr_delay>0) %>% 
+  group_by(dest) %>%
+  mutate(
+    arr_delay_total = sum(arr_delay),
+    arr_delay_prop = arr_delay / arr_delay_total
+  ) %>%
+  select(dest, month, day, dep_time, carrier, flight,
+         arr_delay, arr_delay_prop) %>%
+  arrange(dest, desc(arr_delay_prop))
+  
+```
+```{r}
+flights %>%
+  filter(arr_delay > 0) %>%
+  group_by(dest, origin, carrier, flight) %>%
+  summarise(arr_delay = sum(arr_delay)) %>%
+  group_by(dest) %>%
+  mutate(
+    arr_delay_prop = arr_delay / sum(arr_delay)
+  ) %>%
+  arrange(dest, desc(arr_delay_prop)) %>%
+  select(carrier, flight, origin, dest, arr_delay_prop)
+```
+```{r}
+lagged_delays <- flights %>%
+  arrange(origin, month, day, dep_time) %>%
+  group_by(origin) %>%
+  mutate(dep_delay_lag = lag(dep_delay)) %>%
+  filter(!is.na(dep_delay), !is.na(dep_delay_lag))
+lagged_delays
+```
+```{r}
+lagged_delays %>%
+  group_by(dep_delay_lag) %>%
+  summarise(dep_delay_mean = mean(dep_delay)) %>%
+  ggplot(aes(y = dep_delay_mean, x = dep_delay_lag)) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(0, 1500, by = 120)) +
+  labs(y = "Departure Delay", x = "Previous Departure Delay")
+```
+```{r}
+lagged_delays %>%
+  group_by(origin, dep_delay_lag) %>%
+  summarise(dep_delay_mean = mean(dep_delay)) %>%
+  ggplot(aes(y = dep_delay_mean, x = dep_delay_lag)) +
+  geom_point() +
+  facet_wrap(~ origin, ncol=1) +
+  labs(y = "Departure Delay", x = "Previous Departure Delay")
+```
+```{r}
+standardized_flights <- flights %>%
+  filter(!is.na(air_time)) %>%
+  group_by(dest, origin) %>%
+  mutate(
+    air_time_mean = mean(air_time),
+    air_time_sd = sd(air_time),
+    n = n()
+  ) %>%
+  ungroup() %>%
+  mutate(air_time_standard = (air_time - air_time_mean) / (air_time_sd + 1))
+ggplot(standardized_flights, aes(x = air_time_standard)) +
+  geom_density()
+```
+```{r}
+standardized_flights %>%
+  arrange(air_time_standard) %>%
+  select(
+    carrier, flight, origin, dest, month, day,
+    air_time, air_time_mean, air_time_standard
+  ) %>%
+  head(10) %>%
+  print(width = Inf)
+```
+```{r}
+flights %>%
+   # find all airports with > 1 carrier
+   group_by(dest) %>%
+   mutate(n_carriers = n_distinct(carrier)) %>%
+   filter(n_carriers > 1) %>%
+   # rank carriers by numer of destinations
+   group_by(carrier) %>%
+   summarize(n_dest = n_distinct(dest)) %>%
+   arrange(desc(n_dest))
+#> `summarise()` ungrouping output (override with `.groups` argument)
+#> # A tibble: 16 x 2
+#>   carrier n_dest
+#>   <chr>    <int>
+#> 1 EV          51
+#> 2 9E          48
+#> 3 UA          42
+#> 4 DL          39
+#> 5 B6          35
+#> 6 AA          19
+#> # … with 10 more rows
+```
+
+
+

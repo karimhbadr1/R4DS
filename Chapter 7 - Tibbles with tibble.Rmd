@@ -1,0 +1,236 @@
+---
+title: "Chapter 7 - Tibbles with tibble"
+author: "Karim Badr"
+date: "07/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Prerequisites
+```{r}
+library(tidyverse)
+```
+
+#Creating tibbles
+```{r}
+Iris1<-as_tibble(iris)
+Iris1
+```
+
+```{r}
+tibble(
+  x=1:5,
+  y=1,
+  z=x^2+y
+)
+```
+```{r}
+tb<- tibble(
+  `:)`="smile",
+  ` `="space",
+  `2000`= "number"
+)
+tb
+```
+```{r}
+tribble(~x,~y,~z,"a",2,3.6,"b",1,8.5)
+```
+#Tibble Versus data.frame
+##Printing
+```{r}
+tibble(
+  a = lubridate::now() + runif(1e3) * 86400,
+  b = lubridate::today() + runif(1e3) * 30,
+  c = 1:1e3,
+  d = runif(1e3),
+  e = sample(letters, 1e3, replace = TRUE)
+)
+```
+```{r}
+nycflights13::flights %>% 
+  print(n=10,width=Inf)
+```
+```{r}
+Iris1
+options(tibble.print_max = 3)
+```
+```{r}
+nycflights13::flights %>% 
+  View()
+```
+
+##Subsetting
+```{r}
+df<-tibble(
+  x=runif(5),
+  y=rnorm(5)
+)
+df
+```
+```{r}
+df$x
+```
+
+```{r}
+df["x"]
+df[["x"]]
+```
+```{r}
+df[[1]]
+```
+```{r}
+df[1]
+```
+```{r}
+df$x[1]
+```
+```{r}
+df[1,1]
+```
+```{r}
+df[[1,1]]
+```
+```{r}
+df %>% .$x
+```
+```{r}
+df %>% .["x"]
+```
+```{r}
+df %>% .[["x"]]
+```
+```{r}
+df %>% .[1,1]
+```
+```{r}
+df %>% .[[1,1]]
+```
+#Interacting with Older Code
+
+```{r}
+class(as.data.frame(tb))
+```
+
+#Exercises
+#1
+```{r}
+class(df)
+```
+```{r}
+class(mpg)
+```
+```{r}
+class(mtcars)
+```
+#2
+```{r}
+df1<-data.frame(abc=1,xyz="a")
+df1
+```
+```{r}
+df1$x
+```
+```{r}
+df1[,"xyz"]
+```
+```{r}
+df1[,c("abc","xyz")]
+```
+```{r}
+tb1<-as_tibble(df1)
+tb1
+```
+```{r}
+tb1$x
+```
+```{r}
+tb1[,"xyz"]
+```
+```{r}
+tb1[,c("abc","xyz")]
+```
+#3
+```{r}
+var<-"mpg"
+```
+
+```{r}
+df<-df %>% 
+  mutate(mpg=x/y)
+```
+
+```{r}
+df$var
+```
+```{r}
+df[var]
+```
+```{r}
+class(df[var])
+```
+
+```{r}
+df[[var]]
+```
+#4
+```{r}
+annoying<-tibble(
+  `1`=1:10,
+  `2`=`1` * 2+rnorm(length(`1`))
+)
+```
+#a
+```{r}
+annoying$`1`
+```
+```{r}
+annoying["1"]
+```
+```{r}
+annoying[["1"]]
+```
+#b
+```{r}
+library(ggplot2)
+annoying %>% 
+  ggplot(aes(x=`1`,y=`2`))+
+  geom_point()
+```
+#c
+```{r}
+annoying<-annoying %>% 
+  mutate(`3`=`2`/`1`)
+```
+
+```{r}
+rename(annoying,One=`1`,Two=`2`,Three=`3`)
+```
+#5
+```{r}
+enframe(c(a=5,b=7,c=10))
+```
+#6
+The help page for the print() method of tibble objects is discussed in ?print.tbl. The n_extra argument determines the number of extra columns to print information for.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

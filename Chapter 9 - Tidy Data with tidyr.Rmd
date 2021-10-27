@@ -1,0 +1,477 @@
+---
+title: 'Chapter 9: Tidy Data with tidyr'
+author: "Karim Badr"
+date: "13/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Introduction
+#Prerequisites
+```{r}
+library(tidyverse)
+```
+#Tidy Data
+```{r}
+table1
+```
+```{r}
+table2
+```
+```{r}
+table3
+```
+```{r}
+table4a
+```
+```{r}
+table4b
+```
+```{r}
+table1 %>% mutate(rate=cases/population*10000)
+```
+```{r}
+table1 %>% 
+  count(year,wt=cases)
+```
+```{r}
+library(ggplot2)
+ggplot(table1,aes(year,cases))+
+  geom_line(aes(group=country),color="grey50")+
+  geom_point(aes(color=country))
+```
+#Exercises
+#2
+```{r}
+T2_cases<-table2 %>% 
+  filter(type=="cases") %>% 
+  arrange(country,year)
+```
+
+```{r}
+T2_population<-table2 %>% 
+  filter(type=="population") %>% 
+  arrange(country,year)
+```
+
+```{r}
+T2_1<-tibble(
+  country=T2_cases$country,
+  year=T2_cases$year,
+  cases=T2_cases$count,
+  population=T2_population$count
+)
+```
+
+```{r}
+T2_1<-T2_1 %>% 
+  mutate(rate=(cases/population)*10000)
+```
+
+```{r}
+T2_1<-T2_1 %>% 
+  select(country,year,rate) %>% 
+  mutate(type="cases per cap") %>% 
+  rename(count=rate)
+```
+
+```{r}
+T2_2<-rbind(T2_1,table2) %>% 
+  arrange(country,year,type)
+```
+
+```{r}
+table1 %>% 
+  mutate(rate=cases/population*10000)
+```
+```{r}
+table4a_1<-table4a %>% 
+  mutate(type="cases")
+
+table4b_1<-table4b %>% 
+  mutate(type="population")
+```
+
+```{r}
+tibble(
+  country=table4a$country,
+  `1999`=table4a[["1999"]]/table4b[["1999"]] *10000,
+  `2000`=table4a[["2000"]]/table4b[["2000"]]*10000
+)
+```
+
+```{r}
+table4a[["1999"]]
+```
+```{r}
+a<-table4a
+```
+
+```{r}
+a[1]
+```
+```{r}
+a[1,1]
+```
+```{r}
+a[,1]
+```
+```{r}
+a[1,]
+```
+```{r}
+a[["2000"]]
+```
+```{r}
+a["2000"]
+```
+```{r}
+T2_2 %>% 
+  filter(type=="cases") %>% 
+  select(country,year,count) %>% 
+  rename(cases=count) %>% 
+  ggplot(aes(year,cases)) + 
+  geom_line(aes(group=country),colour="grey50")+
+  geom_point(aes(colour=country))+
+  scale_x_continuous(breaks = unique(table2$year))
+```
+#Pivoting / Spreading and Gathering 
+
+#Longer
+```{r}
+table4a1<-table4a %>% 
+  pivot_longer(c(`1999`,`2000`),names_to="year",values_to="cases")
+```
+
+```{r}
+table4b1<-table4b %>% 
+  pivot_longer(c(`1999`,`2000`),names_to="year",values_to="population")
+```
+
+```{r}
+left_join(table4a1,table4b1)
+```
+#Gather
+```{r}
+t1<-table4a %>% 
+  gather(`1999`,`2000`,key="year",value="cases")
+```
+
+```{r}
+t2<-table4b %>% 
+  gather(`1999`,`2000`,key="year",value="population")
+```
+
+```{r}
+left_join(t1,t2)
+```
+
+```{r}
+table2
+```
+
+#Wider
+```{r}
+table2 %>% 
+  pivot_wider(names_from ="type",values_from="count" )
+```
+#spread
+
+```{r}
+spread(table2,key="type",value="count")
+```
+#Exercises
+```{r}
+stocks<-tibble(
+  year=c(2015,2015,2016,2016),
+  half=c(1,2,1,2),
+  return=c(1.88,0.59,0.92,0.17)
+)
+```
+
+```{r}
+class(stocks$year)
+class(stocks$half)
+class(stocks$return)
+```
+```{r}
+stocks %>% 
+  spread(year,return) %>% 
+  pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return")
+```
+```{r}
+table4a %>% 
+  gather(1999,2000,key="year",value="cases")
+```
+
+```{r}
+table4a %>% 
+  gather(`1999`,`2000`,key="year",value="cases")
+```
+
+```{r}
+people <- tribble(
+  ~name, ~key, ~value,
+  #-----------------|--------|------
+  "Phillip Woods",  "age", 45,
+  "Phillip Woods", "height", 186,
+  "Phillip Woods", "age", 50,
+  "Jessica Cordero", "age", 37,
+  "Jessica Cordero", "height", 156
+)
+```
+
+```{r}
+#spread(people,key,value)
+```
+
+```{r}
+A<-pivot_wider(people, names_from="name", values_from = "value")
+```
+
+```{r}
+people %>% 
+  group_by(name,key) %>% 
+  mutate(obs=row_number()) %>% 
+  spread(name,value)
+```
+
+```{r}
+people %>%
+  distinct(name, key, .keep_all = TRUE) %>%
+  pivot_wider(names_from="name", values_from = "value")
+```
+```{r}
+preg<-tribble(
+  ~pregnant,~male,~female,
+  "yes",NA,10,
+  "no",20,12
+)
+```
+
+
+```{r}
+preg %>% 
+  gather("male","female",key="sex",value="count",na.rm = TRUE)
+```
+#Seperating and Pulling
+
+```{r}
+table3 %>% 
+  separate(rate,into=c("cases","population"))
+```
+```{r}
+table3 %>% 
+  separate(rate,into=c("cases","population"),sep="/")
+```
+```{r}
+table3 %>% 
+  separate(rate,into=c("cases","population"),convert=TRUE)
+```
+```{r}
+table5<-table3 %>% 
+  separate(year,into=c("century","year"),sep=2)
+```
+#Unite
+
+```{r}
+table5 %>% 
+  unite(new,century,year)
+```
+
+```{r}
+table5 %>% 
+  unite(new,century,year,sep="")
+```
+#Exercises
+
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"),extra="merge")
+
+tibble(x = c("a,b,c", "d", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"),fill="left")
+```
+
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"),remove = FALSE)
+```
+#Missing Values
+
+```{r}
+stocks<-tibble(
+  year=c(2015,2015,2015,2015,2016,2016,2016),
+  qtr=c(1,2,3,4,2,3,4),
+  return=c(1.88,0.59,0.35,NA,0.92,0.17,2.66)
+)
+```
+
+```{r}
+stocks %>% 
+  spread(year,return)
+```
+```{r}
+stocks %>% 
+  spread(year,return) %>% 
+  gather(year,return,`2015`:`2016`,na.rm = TRUE)
+```
+```{r}
+stocks %>% 
+  spread(year,return) %>% 
+  gather(year,return,`2015`:`2016`)
+```
+
+```{r}
+stocks %>% 
+  complete(year,qtr)
+```
+```{r}
+treatment<-tribble(
+  ~person,~treatment,~response,
+  "Derrick Whitmore",1,7,
+  NA,2,10,
+  NA,3,9,
+  "Katherine Burke",3,9
+)
+```
+
+```{r}
+treatment %>% 
+  fill(person)
+```
+
+```{r}
+treatment$treatment[2]<-NA
+treatment %>% 
+  fill(person,treatment)
+```
+```{r}
+treatment %>% 
+  fill(person,.direction = "downup")
+```
+
+#Case Study
+
+
+```{r}
+who
+```
+```{r}
+who<-who
+```
+
+```{r}
+who1<- who %>% 
+  gather(new_sp_m014:newrel_f65,key="key",value="cases",na.rm = TRUE)
+```
+
+```{r}
+who1 %>% 
+  count(key)
+```
+```{r}
+who2 <-who1 %>% 
+  mutate(key=stringr::str_replace(key,"newrel","new_rel"))
+who2
+```
+```{r}
+who2 %>% count(key)
+```
+```{r}
+who3<-who2 %>% 
+  separate(key,c("new","type","sexage"),sep="_")
+who3
+```
+```{r}
+who3 %>% count(new)
+```
+```{r}
+who4<-who3 %>% 
+  select(-iso2,-iso3,-new)
+who4
+```
+```{r}
+who5<-who4 %>% 
+  separate(sexage,c("sex","age"),sep=1)
+who5
+```
+```{r}
+who5 %>% count(country)
+```
+```{r}
+who5 %>% count(year)
+```
+```{r}
+who5 %>% count(type)
+```
+```{r}
+who5 %>% count(sex)
+```
+```{r}
+who5 %>% count(age)
+```
+
+```{r}
+who %>% 
+  gather(new_sp_m014:newrel_f65,key="key",value="cases",na.rm = TRUE) %>% 
+  mutate(key=stringr::str_replace(key,"newrel","new_rel")) %>% 
+  separate(key,c("new","type","sexage"),sep="_") %>% 
+  select(-iso2,-iso3,-new) %>% 
+  separate(sexage,c("sex","age"),sep=1)
+```
+#Exercises
+
+```{r}
+who %>% 
+  gather(new_sp_m014:newrel_f65,key="key",value="cases",na.rm = FALSE) %>% 
+  group_by(country,year) %>% 
+  mutate(prop_missing=sum(is.na(cases)) / n()) %>% 
+  filter(prop_missing > 0, prop_missing < 1)
+```
+```{r}
+who1 %>%
+  filter(cases == 0) %>% 
+  nrow()
+```
+```{r}
+who %>% 
+  complete(country, year) %>%
+  nrow()
+```
+```{r}
+who5 %>%
+  group_by(country, year, sex) %>%
+  filter(year > 1995) %>%
+  summarise(cases = sum(cases)) %>% 
+  unite(country_sex, country, sex, remove = FALSE) %>% 
+  ggplot(aes(x = year, y = cases, group = country_sex, colour = sex)) +
+  geom_line()
+  
+```
+```{r}
+who5 %>%
+  group_by(country, year, sex) %>%
+  filter(year == 2010) %>%
+  summarise(cases = sum(cases)) %>% 
+  unite(country_sex, country, sex, remove = FALSE) %>% 
+  #group_by(sex) %>% 
+  ggplot(aes(x=sex,y=cases))+
+  geom_bar(stat="identity")
+```
+
+```{r}
+who %>% 
+  group_by(country,iso2,iso3)
+```
+
+```{r}
+select(who3,country,iso2,iso3) %>% 
+  distinct() %>% 
+  group_by(country) %>% 
+  count() %>% 
+  filter(n>1)
+```

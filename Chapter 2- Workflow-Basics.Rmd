@@ -1,0 +1,21 @@
+---
+title: 'Chapter 2 - Workflow: Basics'
+author: "Karim Badr"
+date: "25/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+this_is_a_really_long_name<-2.5
+this_is_a_really_long_name1<-2.9
+thi
+```
+
+```{r}
+seq(1,10)
+```
+

@@ -1,0 +1,392 @@
+---
+title: "Chapter 8 - Data Import with readr"
+author: "Karim Badr"
+date: "07/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Prerequisites
+```{r}
+library(tidyverse)
+```
+
+#Getting Started
+```{r}
+heights<-read_csv("J:\\Research\\Centre for Statistics\\Karim\\R_Resources & Other\\01 - R tutorial\\Karim's Files\\r4ds\\r4ds-master\\data\\heights.csv")
+```
+```{r}
+read_csv("a,b,c
+         1,2,3
+         4,5,6")
+```
+```{r}
+read_csv("The first line of metadata
+         The second line of metadata
+         x,y,z
+         1,2,3",skip=2)
+```
+```{r}
+read_csv("#A comment I want to skip
+         x,y,z
+         #Another comment
+         1,2,3",comment="#")
+```
+```{r}
+read_csv("1,2,3\n4,5,6",col_names = FALSE)
+```
+```{r}
+read_csv("1,2,3\n4,5,6",col_names=c("x","y","z"))
+```
+```{r}
+read_csv("1,2,3\n4,5,.",na=".")
+```
+#1
+read_delim
+
+#2
+```{r}
+?read_csv
+```
+
+```{r}
+intersect(names(formals(read_csv)), names(formals(read_tsv)))
+```
+```{r}
+identical(names(formals(read_csv)), names(formals(read_tsv)))
+```
+
+#3
+```{r}
+?read_fwf
+```
+
+#4
+
+```{r}
+read_csv("x,y\n1,'a,b'",quote = "'")
+```
+#5
+#a
+```{r}
+read_csv("a,b\n1,2,3\n4,5,6")
+```
+#b
+```{r}
+read_csv("a,b,c\n1,2\n1,2,3,4")
+```
+#c
+```{r}
+read_csv("a,b\n\"1")
+```
+
+#d
+```{r}
+read_csv("a,b\n1,2\na,b")
+```
+#e
+```{r}
+read_csv("a;b\n1;3")
+read_csv2("a;b\n1;3")
+```
+#Parsing a Vector
+```{r}
+str(parse_logical(c("TRUE","FALSE","NA")))
+```
+```{r}
+parse_logical(c("TRUE","FALSE","NA"))
+```
+```{r}
+str(parse_integer(c("1","2","3")))
+```
+```{r}
+parse_integer(c("1","2","3"))
+```
+```{r}
+parse_integer(c("1","231",".","456"),na=".")
+```
+```{r}
+x<-parse_integer(c("123","345","abc","123.45"))
+```
+```{r}
+problems(x)
+```
+#Numbers
+```{r}
+parse_double("1.23")
+```
+```{r}
+parse_double("1,23",locale = locale(decimal_mark=","))
+```
+```{r}
+parse_number("$100")
+```
+```{r}
+parse_number("20%")
+```
+```{r}
+parse_number("It costs $123.45")
+```
+```{r}
+parse_number("$123,456,789")
+```
+```{r}
+parse_number("123.456.789",locale=locale(grouping_mark = "."))
+```
+```{r}
+parse_number("123'456'789",locale=locale(grouping_mark = "'"))
+```
+##Strings
+
+```{r}
+charToRaw("Karim")
+```
+```{r}
+x1<-"El Ni\xf1o was particularly bad this year"
+x2<-"\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd"
+```
+
+```{r}
+parse_character(x1,locale=locale(encoding = "Latin1"))
+```
+
+```{r}
+parse_character(x2,locale=locale(encoding="Shift-JIS"))
+```
+
+```{r}
+guess_encoding(charToRaw(x1))
+```
+```{r}
+guess_encoding(charToRaw(x2))
+```
+##Factors
+```{r}
+fruit<-c("apple","banana")
+parse_factor(c("apple","banana","bananana"),levels=fruit)
+```
+```{r}
+parse_factor(c("apple","banana","banana"),levels = fruit)
+```
+
+##Dates, Date-Times, and Times
+```{r}
+parse_datetime("2010-10-01T2010")
+```
+```{r}
+parse_datetime("20101010")
+```
+```{r}
+parse_datetime("20101001T201919")
+```
+```{r}
+parse_date("2010-10-01")
+```
+```{r}
+library(hms)
+```
+
+```{r}
+parse_time("1:10 pm")
+```
+```{r}
+parse_time("20:10:01")
+```
+```{r}
+parse_date("01/02/14","%d/%m/%y")
+```
+```{r}
+parse_date("01/02/15","%m/%d/%y")
+```
+```{r}
+parse_date("20/02/15","%y/%m/%d")
+```
+```{r}
+parse_date("1 janvier 2015","%d %B %Y",locale=locale("fr"))
+```
+#Exercises
+
+#1
+The locale object has arguments to set the following:
+
+date and time formats: date_names, date_format, and time_format
+time zone: tz
+numbers: decimal_mark, grouping_mark
+encoding: encoding
+
+#2
+```{r}
+locale(decimal_mark = ",",grouping_mark = ",")
+```
+```{r}
+locale(decimal_mark = ",")
+```
+```{r}
+locale(grouping_mark = ".")
+```
+#3
+```{r}
+parse_date("1 janvier 2015", "%d %B %Y", locale = locale("fr"))
+```
+
+```{r}
+parse_date("14 oct. 1979", "%d %b %Y", locale = locale("fr"))
+```
+
+```{r}
+locale_custom <- locale(date_format = "Day %d Mon %M Year %y",
+                 time_format = "Sec %S Min %M Hour %H")
+```
+
+```{r}
+date_custom <- c("Day 01 Mon 02 Year 03", "Day 03 Mon 01 Year 01")
+```
+
+```{r}
+parse_date(date_custom,locale=locale_custom)
+```
+
+```{r}
+time_custom <- c("Sec 01 Min 02 Hour 03", "Sec 03 Min 02 Hour 01")
+```
+
+
+```{r}
+parse_time(time_custom,locale=locale_custom)
+```
+#4
+```{r}
+date_au<-locale(date_format="%d/%m/%Y")
+```
+
+```{r}
+parse_date("03/04/1997",locale=date_au)
+```
+#5#6
+
+#7
+
+```{r}
+d1 <- "January 1, 2010"
+d2 <- "2015-Mar-07"
+d3 <- "06-Jun-2017"
+d4 <- c("August 19 (2015)", "July 1 (2015)")
+d5 <- "12/30/14" # Dec 30, 2014
+t1 <- "1705"
+t2 <- "11:15:10.12 PM"
+```
+
+
+```{r}
+parse_date(d1,"%B %d, %Y")
+```
+
+```{r}
+parse_date(d2,"%Y-%b-%d")
+```
+
+```{r}
+parse_date(d3,"%d-%b-%Y")
+```
+
+```{r}
+parse_date(d4,"%B %d (%Y)")
+```
+
+```{r}
+parse_date(d5,"%m/%d/%y")
+```
+
+```{r}
+parse_time(t1,"%H%M")
+```
+
+```{r}
+t2 <- "11:15:10.12 PM"
+parse_time(t2,"%I:%M:%OS %p")
+```
+#Parsing a File
+##Strategy
+
+```{r}
+guess_parser("2010-10-01")
+```
+```{r}
+guess_parser("15:01")
+```
+
+```{r}
+guess_parser(c("TRUE","FALSE"))
+```
+
+```{r}
+guess_parser(c("1","5","9"))
+```
+
+```{r}
+guess_parser(c("12,352,561"))
+```
+
+```{r}
+str(parse_guess("2010-10-10"))
+```
+##Problems
+
+```{r}
+parse_guess("2010-10-10")
+```
+
+```{r}
+challenge<-read_csv(readr_example("challenge.csv"))
+```
+```{r}
+problems(challenge)
+```
+```{r}
+tail(challenge)
+```
+```{r}
+challenge <- read_csv(
+  readr_example("challenge.csv"), 
+  col_types = cols(
+    x = col_double(),
+    y = col_logical()
+  )
+)
+```
+```{r}
+challenge <- read_csv(
+  readr_example("challenge.csv"), 
+  col_types = cols(
+    x = col_double(),
+    y = col_date()
+  )
+)
+```
+
+```{r}
+tail(challenge)
+```
+```{r}
+challenge_2<-read_csv(readr_example("challenge.csv"),guess_max=1001)
+```
+```{r}
+challenge_2
+```
+```{r}
+challenge2<-read_csv(readr_example("challenge.csv"),col_types = cols(.default=col_character()))
+```
+
+```{r}
+df<-tribble(
+  ~x,~y,"1","1.21","2","2.32","3","4.56"
+)
+df
+```
+```{r}
+type_convert(df)
+```
+#Writing to a File

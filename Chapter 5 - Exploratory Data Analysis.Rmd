@@ -1,0 +1,667 @@
+---
+title: "Chapter 5 - Exploratory Data Analysis"
+author: "Karim Badr"
+date: "30/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the libraries you need.    
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+#Visualizing Distributions
+```{r}
+ggplot(data=diamonds)+
+  geom_bar(mapping=aes(x=cut))
+```
+```{r}
+diamonds %>% 
+  count(cut)
+```
+```{r}
+ggplot(data=diamonds)+
+  geom_histogram(mapping=aes(x=carat),binwidth=0.5)
+```
+```{r}
+diamonds %>% 
+  count(cut_width(carat,0.5))
+```
+```{r}
+smaller<-diamonds %>% 
+  filter(carat<3)
+ggplot(data=smaller)+
+  geom_histogram(mapping=aes(x=carat),binwidth = 0.1)
+```
+```{r}
+ggplot(data=smaller,mapping=aes(x=carat,color=cut))+
+  geom_freqpoly(binwidth=0.1)
+```
+#Typical Values
+```{r}
+ggplot(data=smaller,mapping=aes(x=carat))+
+  geom_histogram(binwidth = 0.01)
+```
+```{r}
+ggplot(data=faithful,mapping = aes(x=eruptions))+
+  geom_histogram(binwidth = 0.25)
+```
+#Unusual Values
+```{r}
+ggplot(diamonds)+
+  geom_histogram(mapping=aes(x=y),binwidth = 0.5)
+```
+```{r}
+ggplot(diamonds)+
+  geom_histogram(mapping=aes(x=y),binwidth = 0.5)+
+  coord_cartesian(ylim=c(0,50))
+```
+```{r}
+unusual<-diamonds %>% 
+  filter(y<3|y>20) %>% 
+  arrange(y)
+unusual
+```
+#Exercises
+
+#1
+For x:
+```{r}
+diamonds %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x=x),binwidth = 0.01)
+```
+```{r}
+unusual_x<-diamonds %>% 
+  filter(x<3|x>9) 
+unusual_x %>% 
+  ggplot()+
+  geom_histogram(mapping=aes(x=x),binwidth = 0.01)
+unusual_x
+```
+```{r}
+unusual_x %>% 
+  count(cut_width(x,0.5))
+```
+
+For y:
+```{r}
+diamonds %>%
+  ggplot()+
+  geom_histogram(mapping=aes(x=y),binwidth = 0.01)
+```
+
+```{r}
+unusual_y<-diamonds %>% 
+  filter(y<3|y>20)
+unusual_y %>% 
+  ggplot()+
+  geom_histogram(mapping=aes(x=y),binwidth = 0.5)
+unusual_y
+```
+```{r}
+unusual_y %>% 
+  count(cut_width(y,0.5))
+```
+
+For z:
+```{r}
+diamonds %>%
+  ggplot()+
+  geom_histogram(mapping=aes(x=z),binwidth = 0.01)
+```
+
+```{r}
+unusual_z<-diamonds %>% 
+  filter(z>6)
+unusual_z %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x=z),binwidth = 0.5)
+```
+```{r}
+unusual_z %>% 
+  count(cut_width(z,0.5))
+```
+```{r}
+unusual_z
+```
+```{r}
+summary(select(diamonds, x, y, z))
+```
+```{r}
+filter(diamonds, x == 0 | y == 0 | z == 0)
+```
+#2
+```{r}
+View(diamonds)
+?diamonds
+```
+
+```{r}
+summary(diamonds)
+```
+```{r}
+diamonds %>% 
+  filter(price<2500) %>% 
+ggplot()+
+  geom_histogram(mapping = aes(x=price),binwidth=10)
+```
+```{r}
+diamonds %>% 
+  filter(price>1200 & price<1800) %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x=price),binwidth=100)
+```
+```{r}
+diamonds %>% 
+  count(cut_width(price,5000))
+```
+```{r}
+diamonds %>%
+  mutate(ending = price %% 10) %>%
+  ggplot(aes(x = ending)) +
+  geom_histogram(binwidth = 1, center = 0)
+```
+```{r}
+diamonds %>%
+  mutate(ending = price %% 100) %>%
+  ggplot(aes(x = ending)) +
+  geom_histogram(binwidth = 1)
+```
+```{r}
+diamonds %>%
+  mutate(ending = price %% 1000) %>%
+  filter(ending >= 500, ending <= 800) %>%
+  ggplot(aes(x = ending)) +
+  geom_histogram(binwidth = 1)
+
+```
+
+
+#3
+```{r}
+diamonds %>% 
+  filter(carat==0.99)
+```
+```{r}
+diamonds %>% 
+  filter(carat==1)
+```
+```{r}
+diamonds %>% 
+  filter(carat>=0.99,carat<=1.00) %>% 
+  count(carat)
+```
+#4
+```{r}
+ggplot(diamonds) +
+  geom_histogram(mapping = aes(x = price)) +
+  coord_cartesian(xlim = c(100, 5000), ylim = c(0, 3000))
+```
+```{r}
+ggplot(diamonds) +
+  geom_histogram(mapping = aes(x = price)) +
+  xlim(100, 5000) +
+  ylim(0, 1500)+
+  coord_cartesian(xlim = c(100, 5000), ylim = c(0, 3000))
+```
+
+#Missing Values
+```{r}
+diamonds2<-diamonds %>% 
+  filter(between(y,3,20))
+```
+
+```{r}
+diamonds2 <- diamonds %>% 
+  mutate(y=ifelse(y<3|y>20,NA,y))
+```
+
+```{r}
+ggplot(data=diamonds2,mapping=aes(x=x,y=y))+geom_point(na.rm = TRUE)
+```
+```{r}
+nycflights13::flights %>% 
+  mutate(
+    cancelled=is.na(dep_time),
+    sched_hour=sched_dep_time%/%100,
+    sched_min=sched_dep_time%%100,
+    sched_dep_time=sched_hour+sched_min/60
+  ) %>% 
+  ggplot(mapping = aes(sched_dep_time))+
+  geom_freqpoly(mapping=aes(color=cancelled),binwidth=1/4)
+```
+#Exercises
+```{r}
+diamonds2 %>% 
+  ggplot(mapping = aes(x=y))+
+  geom_histogram()
+```
+```{r}
+diamonds2 %>% 
+  mutate(cut=if_else(runif(n()) < 0.1, NA_character_, as.character(cut))) %>% 
+  ggplot(mapping = aes(x=cut))+
+  geom_bar()
+```
+```{r}
+x<-c(1,2,3,NA)
+mean(x,na.rm=TRUE)
+sd(x,na.rm=TRUE)
+```
+#Covariation
+```{r}
+ggplot(data=diamonds,mapping=aes(x=price))+
+  geom_freqpoly(mapping=aes(color=cut),binwidth=500)
+```
+```{r}
+ggplot(diamonds)+
+  geom_bar(mapping=aes(x=cut))
+```
+```{r}
+ggplot(
+  data=diamonds,
+  mapping=aes(x=price,y=..density..)
+)+
+  geom_freqpoly(mapping=aes(color=cut),binwidth=500)
+```
+```{r}
+ggplot(data=diamonds,mapping=aes(x=cut,y=price))+
+  geom_boxplot()
+```
+```{r}
+ggplot(data=mpg,mapping=aes(x=class,y=hwy))+
+  geom_boxplot()
+```
+```{r}
+ggplot(data=mpg,mapping=aes(x=reorder(class,hwy,FUN = median),y=hwy))+
+  geom_boxplot()+
+  coord_flip()
+```
+```{r}
+ggplot(data = mpg) +
+  geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y = hwy))+
+  coord_flip()
+```
+#Exercises
+#1
+```{r}
+nycflights13::flights %>% 
+  mutate(
+    cancelled=is.na(dep_time),
+    sched_hour=sched_dep_time%/%100,
+    sched_min=sched_dep_time%%100,
+    sched_dep_time=sched_hour+sched_min/60
+  ) %>% 
+  ggplot(mapping = aes(x=sched_dep_time,y=..density..))+
+  geom_freqpoly(mapping=aes(color=cancelled),binwidth=1/4)
+```
+```{r}
+nycflights13::flights %>% 
+  mutate(
+    cancelled=is.na(dep_time),
+    sched_hour=sched_dep_time%/%100,
+    sched_min=sched_dep_time%%100,
+    sched_dep_time=sched_hour+sched_min/60
+  ) %>% 
+  ggplot(mapping = aes(x=cancelled,y=sched_dep_time))+
+  geom_boxplot()
+```
+#2
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=carat,y=price))+
+  geom_point()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=depth,y=price))+
+  geom_point()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=table,y=price))+
+  geom_point()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=x,y=price))+
+  geom_point()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=y,y=price))+
+  geom_point()+
+  coord_cartesian(xlim=(c(0,20)))
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=z,y=price))+
+  geom_point()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=reorder(color,price,FUN=median),y=price))+
+  geom_boxplot()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=reorder(clarity,price,FUN=median),y=price))+
+  geom_boxplot()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=reorder(cut,price,FUN=median),y=price))+
+  geom_boxplot()
+```
+
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=carat,y=price))+
+  geom_boxplot(mapping = aes(group = cut_width(carat, 0.1)),orientation = "x")
+```
+#3
+```{r}
+install.packages("ggstance")
+```
+```{r}
+library(ggstance)
+```
+```{r}
+ggplot(data = mpg) +
+  geom_boxplot(mapping = aes(x = reorder(class, hwy, FUN = median), y = hwy))+
+  coord_flip()
+```
+```{r}
+ggplot(data = mpg) +
+  geom_boxploth(mapping = aes(y = reorder(class, hwy, FUN = median), x = hwy))
+```
+#4
+```{r}
+install.packages("lvplot")
+```
+```{r}
+library(lvplot)
+```
+
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=reorder(cut,price,FUN=median),y=price))+
+  geom_lv()
+```
+#5
+```{r}
+ggplot(data = diamonds, mapping = aes(x = price, y = ..density..)) +
+  geom_freqpoly(mapping = aes(color = cut), binwidth = 500)
+```
+```{r}
+ggplot(data = diamonds, mapping = aes(x=price)) +
+  geom_histogram()+
+  facet_wrap(~cut,ncol=1,scales="free_y")
+```
+```{r}
+ggplot(data = diamonds, mapping = aes(x = cut,y=price)) +
+  geom_violin()+
+  coord_flip()
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=reorder(cut,carat,FUN=median),y=carat))+
+  geom_boxplot()
+```
+#6
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=reorder(cut,price,FUN=median),y=price))+
+  geom_jitter()
+```
+```{r}
+diamonds4<-diamonds2 %>% 
+  filter(price<360) 
+
+diamonds4 %>% 
+  ggplot(mapping=aes(x=reorder(cut,price,FUN=median),y=price))+
+  geom_jitter()
+```
+```{r}
+install.packages("ggbeeswarm")
+```
+```{r}
+library(ggbeeswarm)
+```
+
+```{r}
+ggplot(data = mpg) +
+  geom_quasirandom(mapping = aes(
+    x = reorder(class, hwy, FUN = median),
+    y = hwy
+  ))
+```
+```{r}
+ggplot(data = mpg) +
+  geom_quasirandom(
+    mapping = aes(
+      x = reorder(class, hwy, FUN = median),
+      y = hwy
+    ),
+    method = "tukey"
+  )
+```
+```{r}
+ggplot(data = mpg) +
+  geom_quasirandom(
+    mapping = aes(
+      x = reorder(class, hwy, FUN = median),
+      y = hwy
+    ),
+    method = "tukeyDense"
+  )
+```
+```{r}
+ggplot(data = mpg) +
+  geom_quasirandom(
+    mapping = aes(
+      x = reorder(class, hwy, FUN = median),
+      y = hwy
+    ),
+    method = "frowney"
+  )
+```
+```{r}
+ggplot(data = mpg) +
+  geom_quasirandom(
+    mapping = aes(
+      x = reorder(class, hwy, FUN = median),
+      y = hwy
+    ),
+    method = "smiley"
+  )
+```
+```{r}
+ggplot(data = mpg) +
+  geom_beeswarm(mapping = aes(
+    x = reorder(class, hwy, FUN = median),
+    y = hwy
+  ))
+```
+#Two Categorical Variables
+```{r}
+ggplot(data=diamonds)+
+  geom_count(mapping=aes(x=cut,y=color))
+```
+```{r}
+diamonds %>% 
+  count(color,cut)
+```
+```{r}
+diamonds %>% 
+  count(color,cut) %>% 
+  ggplot(mapping=aes(x=color,y=cut))+
+  geom_tile(mapping=aes(fill=n))
+```
+```{r}
+a<-diamonds %>% 
+  count(color,cut)
+a %>% ggplot(mapping=aes(x=color,y=cut))+
+  geom_tile(mapping=aes(fill=n))
+```
+```{r}
+install.packages("seriation")
+```
+```{r}
+library(seriation)
+```
+
+#Exercises
+#1
+```{r}
+diamonds %>% 
+  count(color,cut) %>% 
+  group_by(color) %>% 
+  mutate(prop=n/sum(n)) %>% 
+  ggplot(mapping=aes(x=color,y=cut))+
+  geom_tile(mapping=aes(fill=prop))
+```
+```{r}
+diamonds %>% 
+  count(color,cut) %>% 
+  group_by(cut) %>% 
+  mutate(prop=n/sum(n)) %>% 
+  ggplot(mapping=aes(x=color,y=cut))+
+  geom_tile(mapping=aes(fill=prop))
+```
+#2
+```{r}
+library(nycflights13)
+
+flights %>% 
+  group_by(dest,month) %>% 
+  mutate(dep_delay1=mean(dep_delay,na.rm=TRUE)) %>% 
+  ggplot(mapping=aes(x=factor(month),y=dest,fill=dep_delay1))+
+  geom_tile()
+```
+```{r}
+flights %>%
+  group_by(month, dest) %>%                                 # This gives us (month, dest) pairs
+  summarise(dep_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  group_by(dest) %>%                                        # group all (month, dest) pairs by dest ..
+  filter(n() == 12) %>%                                     # and only select those that have one entry per month 
+  ungroup() %>%
+  mutate(dest = reorder(dest, dep_delay)) %>%
+  ggplot(aes(x = factor(month), y = dest, fill = dep_delay)) +
+  geom_tile() +
+  labs(x = "Month", y = "Destination", fill = "Departure Delay")
+```
+#Two Continuous Variables
+```{r}
+ggplot(data=diamonds)+
+  geom_point(mapping = aes(x=carat,y=price))
+```
+```{r}
+ggplot(data=diamonds)+
+  geom_point(mapping = aes(x=carat,y=price),alpha=1/100)
+```
+```{r}
+ggplot(data=smaller)+
+  geom_bin2d(mapping=aes(x=carat,y=price))
+```
+```{r}
+install.packages("hexbin")
+library(hexbin)
+```
+
+
+```{r}
+ggplot(data=smaller)+
+  geom_hex(mapping=aes(x=carat,y=price))
+```
+```{r}
+ggplot(data=smaller,mapping=aes(x=carat,y=price))+
+  geom_boxplot(mapping=aes(group=cut_width(carat,0.1)))
+```
+```{r}
+ggplot(data=smaller,mapping=aes(x=carat,y=price))+
+  geom_boxplot(mapping=aes(group=cut_width(carat,0.1)),varwidth=TRUE)
+```
+```{r}
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) + 
+  geom_boxplot(mapping = aes(group = cut_number(carat, 20)))
+```
+#Exercises
+#1
+```{r}
+ggplot(data=smaller,mapping=aes(color=cut_number(carat,2),x=price))+
+geom_freqpoly()
+```
+```{r}
+ggplot(diamonds, aes(x = cut_number(price, 10), y = carat)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Price")
+```
+```{r}
+ggplot(diamonds, aes(x = cut_width(price, 2000), y = carat)) +
+  geom_boxplot(varwidth = TRUE) +
+  coord_flip() +
+  xlab("Price")
+```
+#4
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=carat,y=price))+
+  geom_hex()+
+  facet_wrap(~cut,ncol=1)
+```
+```{r}
+diamonds %>% 
+  ggplot(mapping=aes(x=cut_width(carat,1,boundary = 0),y=price,colour=cut))+
+  geom_boxplot()
+```
+#Patterns and Models
+```{r}
+ggplot(data=faithful)+
+  geom_point(mapping=aes(x=eruptions,y=waiting))
+```
+```{r}
+library(modelr)
+
+mod<-lm(log(price)~log(carat),data=diamonds)
+
+diamondsX<-diamonds %>% 
+  add_residuals(mod) %>% 
+  mutate(resid=exp(resid))
+```
+```{r}
+ggplot(data=diamondsX)+
+  geom_point(mapping=aes(x=carat,y=resid))
+```
+```{r}
+ggplot(data=diamondsX)+
+  geom_boxplot(mapping=aes(x=cut,y=resid))
+```
+#ggplot2 Calls
+```{r}
+ggplot(data = faithful, mapping = aes(x = eruptions)) + 
+  geom_freqpoly(binwidth = 0.25)
+```
+```{r}
+ggplot(faithful, aes(eruptions)) + 
+  geom_freqpoly(binwidth = 0.25)
+```
+```{r}
+diamonds %>% 
+  count(cut, clarity) %>% 
+  ggplot(aes(clarity, cut, fill = n)) + 
+    geom_tile()
+```
+
+
+
+
+
+
+
